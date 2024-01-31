@@ -158,23 +158,9 @@
 
 
 #include "hx711.h"
-
+/*
 int8_t dato = 0;
 int32_t value = 0;
-
-int princ(void){
-   static char uartBuff[7];
-   
-   uartConfig( UART_USB, 115200 );
-   initGalga();
-   
-   uartWriteString( UART_USB, "Buenas\r\n" );
-   
-   while(1){
-      galgaMachine(uartBuff);
-   }
-   return 0;
-}
 
 void galgaMachine(char* result){
    switch(estadoG){
@@ -216,14 +202,14 @@ void galgaMachine(char* result){
       break;
    }
 }
-
+*/
 void initGalga(void){
    gpioInit(RS232_RXD , GPIO_OUTPUT );//SK
    gpioInit(RS232_TXD , GPIO_INPUT );//DT
    gpioInit(GPIO7, GPIO_INPUT);
-   estadoG = CONFIGURANDO;
 }
 
+/*
 char* itoa(int value, char* result, int base) {
    // check that the base if valid
    if (base < 2 || base > 36) { *result = '\0'; return result; }
@@ -247,3 +233,4 @@ char* itoa(int value, char* result, int base) {
    }
    return result;
 }
+*/

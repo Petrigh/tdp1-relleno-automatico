@@ -63,7 +63,7 @@ void stMachine (void){
       break;
       break;
       case TARA:
-         if(system_call_count++ > 3){
+         if(system_call_count++ > 9){
             suma /= system_call_count;
             system_call_count = 0;
             value = 0;
