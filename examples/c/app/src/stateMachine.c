@@ -4,10 +4,11 @@
 uint8_t pinLED[3] = {GPIO1,GPIO3,GPIO5}; //3 LEDS (AZUL, AMARILLO, VERDE)
 uint8_t pinButtons[2] = {GPIO7,GPIO8}; //3 botones
 int i,system_call_count;
-uint32_t medidas[10];
-uint32_t average;
+int32_t medidas[10];
+int32_t average;
 enum veltState estado = START;
 enum galgaState galestado;
+char bufferMachine[10];
 
 
 void initRoutine(void){
@@ -56,16 +57,21 @@ void stMachine (void){
 			galestado = LOAD;
 			estado = TRANSICION;
 		} else {
-			readGalga(medidas[system_call_count]);
+			medidas[system_call_count] = readGalga();
 			galestado = TARE;
 			estado = TRANSICION;
 		 }
 	  break;
 	  case LLENANDO:
 		gpioWrite(GPIO3, ON);
+        for(i=0;i<10;i++){
+         itoa(medidas[i], bufferMachine, 10);
+         uartWriteString( UART_USB, bufferMachine );
+         uartWriteString( UART_USB, "\r\n" );
+      }
 		pasoTolva();
-		readGalga(medidas[0]);
-		if  ((medidas[0] - average ) > 1000) {
+		medidas[0] = readGalga();
+		if  ((medidas[0] - average ) > 100) {
 		   galestado = TARE;
 		   estado = COMPLETADO;
 		} else {
