@@ -1,5 +1,5 @@
 #include "helper.h"
-#define OFFSET 10000
+#define OFFSET 16000000
 
 void initIRyLED(void);
 void initGalga(void);
@@ -70,9 +70,10 @@ uint32_t readGalga(void){
 	   value+=gpioRead(RS232_TXD);
 	   gpioWrite(RS232_RXD , OFF);
 	}
-    gpioWrite(RS232_RXD , ON); //1 pulso mas para elegir el canal
-    gpioWrite(RS232_RXD , OFF);
-    gpioWrite(RS232_TXD , ON);
+   gpioWrite(RS232_RXD , ON); //1 pulso mas para elegir el canal
+   gpioWrite(RS232_RXD , OFF);
+   gpioWrite(RS232_TXD , ON);
+   return value;
 }
 
 uint32_t promedio(uint32_t* value, int max){
@@ -80,27 +81,20 @@ uint32_t promedio(uint32_t* value, int max){
 	uint32_t aux;
 	for(i=0; i<max; i++){
 		aux = value[i] - OFFSET;
-      
-      uartWriteString( UART_USB, "aux:\r\n" );
-      itoa(aux, buffer, 10);
-      uartWriteString( UART_USB, buffer );
-      uartWriteString( UART_USB, "\r\n" );
 		if(aux < 0){
 			aux = 0;
 		}
 		result += aux;
 	}
-   result/max;
+   result /= max;
 	return result;
 }
 
-void pasoTolva(void){
-    for(i=0;i<4;i++){
-       gpioWrite( pinV[i], ON);
-       gpioWrite( pinV[((i+1) % 4)], ON);
-       delay(2);
-       gpioWrite( pinV[i], OFF);
-    }
+void pasoTolva(int index){
+   index = index % 4000;
+   gpioWrite( pinV[index%4], OFF);
+   gpioWrite( pinV[((index+1) % 4)], ON);
+   gpioWrite( pinV[((index+2) % 4)], ON);
 }
 
 char* itoa(int value, char* result, int base) {
@@ -127,15 +121,3 @@ char* itoa(int value, char* result, int base) {
    return result;
 }
 
-void printNums(uint32_t promedio, char* buffer, uint32_t* result){
-   uartWriteString( UART_USB, "Tara:\r\n" );
-   for(i=0;i<10;i++){
-      itoa(result[i], buffer, 10);
-      uartWriteString( UART_USB, buffer );
-      uartWriteString( UART_USB, "\r\n" );
-   }
-   uartWriteString( UART_USB, "promedio:\r\n" );
-   itoa(promedio, buffer, 10);
-   uartWriteString( UART_USB, buffer );
-   uartWriteString( UART_USB, "\r\n" );
-}

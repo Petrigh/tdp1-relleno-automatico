@@ -6,6 +6,7 @@ uint8_t pinButtons[2] = {GPIO7,GPIO8}; //3 botones
 int i,system_call_count;
 int32_t medidas[10];
 int32_t average;
+static int indexTolva = 0;
 enum veltState estado = START;
 enum galgaState galestado;
 char bufferMachine[10];
@@ -64,14 +65,12 @@ void stMachine (void){
 	  break;
 	  case LLENANDO:
 		gpioWrite(GPIO3, ON);
-        for(i=0;i<10;i++){
-         itoa(medidas[i], bufferMachine, 10);
-         uartWriteString( UART_USB, bufferMachine );
-         uartWriteString( UART_USB, "\r\n" );
-      }
-		pasoTolva();
+		if(indexTolva > 3500){
+			indexTolva = 0;
+		}
+		pasoTolva(indexTolva++);
 		medidas[0] = readGalga();
-		if  ((medidas[0] - average ) > 100) {
+		if  ((medidas[0] - average ) > 15000) {
 		   galestado = TARE;
 		   estado = COMPLETADO;
 		} else {

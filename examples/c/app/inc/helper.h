@@ -5,7 +5,7 @@
 
 void initialize(void);
 void configGalga(void);
-void pasoTolva(void);
+void pasoTolva(int index);
 uint32_t readGalga(void);
 uint32_t promedio(uint32_t* value, int i);
 char* itoa(int value, char* result, int base);
