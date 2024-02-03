@@ -23,7 +23,7 @@ extern "C" {
 /*==================[declaraciones de datos externos]========================*/
 
 /*==================[declaraciones de funciones externas]====================*/
-void onTimer (void *);
+
    
 /*==================[c++]====================================================*/
 #ifdef __cplusplus
