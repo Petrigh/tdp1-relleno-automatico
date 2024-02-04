@@ -5,10 +5,15 @@
 
 void initialize(void);
 void configGalga(void);
-void pasoTolva(int index);
+void pasoTolva();
 uint32_t readGalga(void);
 uint32_t promedio(uint32_t* value, int i);
 char* itoa(int value, char* result, int base);
-void printNums(uint32_t promedio, char* buffer, uint32_t* result);
 
+enum tolvaState{E1, E2, E3, E4}; //Estados Tolva;
+enum tolvaState estadoTolva;
+
+bool llenandoTolva;
+bool controlGalga;
+static uint32_t pesoAnterior, pesoActual;
 #endif // HELPER_H

@@ -5,8 +5,9 @@ void initIRyLED(void);
 void initGalga(void);
 void initCinta(void);
 void initTolva(void);
+void initButtons(void);
 uint32_t value;
-static char buffer[10];
+
 
 
 uint8_t pinV[4] = {LCD4,LCDRS,LCD3,LCD2}; //Motor paso a paso
@@ -18,7 +19,11 @@ void initialize(void){
 	initGalga();
 	initCinta();
 	initTolva();
-	uartConfig( UART_USB, 115200 );
+   initButtons();
+   controlGalga = false;
+   pesoAnterior = 0;
+   pesoActual = 0;
+   uartConfig(UART_USB, 115200);
 }
 
 void initIRyLED(void){
@@ -27,7 +32,7 @@ void initIRyLED(void){
    gpioInit(GPIO3 , GPIO_OUTPUT );//LED AMARILLO
    gpioInit(GPIO5 , GPIO_OUTPUT );//LED VERDE
    gpioWrite(CAN_TD, ON);
-   gpioWrite(GPIO1, ON);
+   gpioWrite(GPIO1, OFF);
    gpioWrite(GPIO3, OFF);
    gpioWrite(GPIO5, OFF);
 }
@@ -35,13 +40,15 @@ void initIRyLED(void){
 void initGalga(void){
    gpioInit(RS232_RXD , GPIO_OUTPUT );//SK
    gpioInit(RS232_TXD , GPIO_INPUT );//DT
-   gpioInit(GPIO7, GPIO_INPUT);
+}
+
+void initButtons(void){
+   gpioInit(GPIO8, GPIO_INPUT); //Boton Start
+   gpioInit(GPIO7, GPIO_INPUT); //Boton Stop
 }
 
 void initCinta(void){
    pwmConfig(0, PWM_ENABLE);
-   pwmInit(PWM10, PWM_ENABLE_OUTPUT);
-   pwmWrite(PWM10, 0);
 }
 
 void initTolva(void){
@@ -49,6 +56,7 @@ void initTolva(void){
 	gpioInit(LCDRS, GPIO_OUTPUT);
 	gpioInit(LCD3, GPIO_OUTPUT);
 	gpioInit(LCD2, GPIO_OUTPUT);
+   estadoTolva = E1;
 }
 
 void configGalga(void){
@@ -73,14 +81,14 @@ uint32_t readGalga(void){
    gpioWrite(RS232_RXD , ON); //1 pulso mas para elegir el canal
    gpioWrite(RS232_RXD , OFF);
    gpioWrite(RS232_TXD , ON);
-   return value;
+   return value - OFFSET;
 }
 
 uint32_t promedio(uint32_t* value, int max){
 	uint32_t result = 0;
 	uint32_t aux;
 	for(i=0; i<max; i++){
-		aux = value[i] - OFFSET;
+		aux = value[i];
 		if(aux < 0){
 			aux = 0;
 		}
@@ -90,11 +98,37 @@ uint32_t promedio(uint32_t* value, int max){
 	return result;
 }
 
-void pasoTolva(int index){
-   index = index % 4000;
-   gpioWrite( pinV[index%4], OFF);
-   gpioWrite( pinV[((index+1) % 4)], ON);
-   gpioWrite( pinV[((index+2) % 4)], ON);
+void pasoTolva(){
+   switch(estadoTolva){
+      case E1:
+         gpioWrite(LCD4, ON);
+         gpioWrite(LCDRS, OFF);
+         gpioWrite(LCD3, OFF);
+         gpioWrite(LCD2, OFF);
+         estadoTolva = E2;
+      break;
+      case E2:
+         gpioWrite(LCD4, OFF);
+         gpioWrite(LCDRS, ON);
+         gpioWrite(LCD3, OFF);
+         gpioWrite(LCD2, OFF);
+         estadoTolva = E3;
+      break;
+      case E3:
+         gpioWrite(LCD4, OFF);
+         gpioWrite(LCDRS, OFF);
+         gpioWrite(LCD3, ON);
+         gpioWrite(LCD2, OFF);
+         estadoTolva = E4;
+      break;
+      case E4:
+         gpioWrite(LCD4, OFF);
+         gpioWrite(LCDRS, OFF);
+         gpioWrite(LCD3, OFF);
+         gpioWrite(LCD2, ON);
+         estadoTolva = E1;
+      break;
+   }
 }
 
 char* itoa(int value, char* result, int base) {

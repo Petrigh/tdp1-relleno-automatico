@@ -2,32 +2,36 @@
 #include "helper.h"
 
 uint8_t pinLED[3] = {GPIO1,GPIO3,GPIO5}; //3 LEDS (AZUL, AMARILLO, VERDE)
-uint8_t pinButtons[2] = {GPIO7,GPIO8}; //3 botones
+enum veltState {START, NOHAYCAJA, TARA, CONFIGURANDO, TRANSICION, LLENANDO, COMPLETADO, STOP};
+enum veltState estado = STOP;
+enum galgaState {LOAD, TARE};
+enum galgaState galestado;
 int i,system_call_count;
 int32_t medidas[10];
 int32_t average;
-static int indexTolva = 0;
-enum veltState estado = START;
-enum galgaState galestado;
-char bufferMachine[10];
+int toogleLED = 0;
+int preescalerGalga = 0;
+static char buffer[10];
 
 
 void initRoutine(void){
    system_call_count = 0;
-   estado = NOHAYCAJA;
+   estado = COMPLETADO;
    galestado = TARE;
+   gpioWrite(GPIO1, OFF);
+   gpioWrite(GPIO3, OFF);
+   gpioWrite(GPIO5, OFF);
+   pwmWrite(PWM10, 0);
+   llenandoTolva = false;
 }
 
 
 void stMachine (void){
    switch(estado){
-   	  case START:
-   		initRoutine();
-	  break;
 	  case NOHAYCAJA:
 		 if(gpioRead(CAN_TD)){
 			gpioWrite(GPIO5, ON);
-			pwmWrite(PWM10, 170);
+			pwmWrite(PWM10, 200);
 		 }else{
 			gpioWrite(GPIO5, OFF);
 			pwmWrite(PWM10, 0);
@@ -64,21 +68,33 @@ void stMachine (void){
 		 }
 	  break;
 	  case LLENANDO:
+      llenandoTolva = true;
 		gpioWrite(GPIO3, ON);
-		if(indexTolva > 3500){
-			indexTolva = 0;
-		}
-		pasoTolva(indexTolva++);
-		medidas[0] = readGalga();
-		if  ((medidas[0] - average ) > 15000) {
+      medidas[0] = readGalga();
+		if  ((medidas[0] - average ) > 1000) {
 		   galestado = TARE;
 		   estado = COMPLETADO;
+         llenandoTolva = false;
 		} else {
 		   galestado = LOAD;
 		   estado = TRANSICION;
 		}
+      if(preescalerGalga++ > 300){
+         controlGalga = true;
+         preescalerGalga = 0;
+         pesoActual = medidas[0];
+         
+      }
+      if( controlGalga == true) {
+         if((pesoAnterior != 0) && ((pesoActual - pesoAnterior) <  350)){
+            stop();
+         }
+		   pesoAnterior = pesoActual;
+         controlGalga = false;
+      }
 	  break;
 	  case COMPLETADO:
+      pwmInit(PWM10, PWM_ENABLE_OUTPUT);
 		 gpioWrite(GPIO3, OFF);
 		 if (gpioRead(CAN_TD)){
 			gpioWrite(GPIO1, OFF);
@@ -86,8 +102,38 @@ void stMachine (void){
 			estado = NOHAYCAJA;
 		 }else{
 			gpioWrite(GPIO1, ON);
-			pwmWrite(PWM10, 170);
+			pwmWrite(PWM10, 200);
 		 }
 	  break;
+     case STOP:
+        if(toogleLED++ > 100){
+            toogleLED = 0;
+            gpioToggle(GPIO1);
+            gpioToggle(GPIO3);
+            gpioToggle(GPIO5);
+         }
+         pwmConfig(0, PWM_DISABLE);
+     break;
    }
+}
+
+
+
+void start(void){
+   if(estado == START || estado == STOP){
+      initRoutine();
+   }
+}
+
+void stop(void){
+   system_call_count = 0;
+   estado = STOP;
+   galestado = TARE;
+   gpioWrite(GPIO1, OFF);
+   gpioWrite(GPIO3, OFF);
+   gpioWrite(GPIO5, OFF);
+   controlGalga = false;
+   pesoAnterior = 0;
+   pesoActual = 0;
+   preescalerGalga = 0;
 }

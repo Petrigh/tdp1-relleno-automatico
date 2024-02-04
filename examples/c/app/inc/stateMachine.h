@@ -3,9 +3,8 @@
 
 #include "sapi.h"
 
-enum veltState {START, NOHAYCAJA, TARA, CONFIGURANDO, TRANSICION, LLENANDO, COMPLETADO};
-enum galgaState {LOAD, TARE};
 void stMachine(void);
-
+void start(void);
+void stop(void);
 
 #endif // STATEMACHINE_H
