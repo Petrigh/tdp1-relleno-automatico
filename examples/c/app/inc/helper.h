@@ -8,6 +8,7 @@ void configGalga(void);
 void pasoTolva();
 uint32_t readGalga(void);
 uint32_t promedio(uint32_t* value, int i);
+void arrancarCinta(void);
 char* itoa(int value, char* result, int base);
 
 enum tolvaState{E1, E2, E3, E4}; //Estados Tolva;

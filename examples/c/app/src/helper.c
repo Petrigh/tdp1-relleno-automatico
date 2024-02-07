@@ -7,7 +7,7 @@ void initCinta(void);
 void initTolva(void);
 void initButtons(void);
 uint32_t value;
-
+static int cintaDelay = 0;
 
 
 uint8_t pinV[4] = {LCD4,LCDRS,LCD3,LCD2}; //Motor paso a paso
@@ -133,6 +133,16 @@ void pasoTolva(){
    }
 }
 
+void arrancarCinta(void){
+   int pwmActual;
+   pwmActual = pwmRead(PWM10);
+   if((pwmActual == 0) && (cintaDelay++ < 3)){
+      pwmWrite(PWM10, 255);
+   }else{
+      pwmWrite(PWM10, 170);
+      cintaDelay = 0;
+   }
+}
 char* itoa(int value, char* result, int base) {
    // check that the base if valid
    if (base < 2 || base > 36) { *result = '\0'; return result; }

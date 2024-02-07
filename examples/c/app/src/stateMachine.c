@@ -31,7 +31,7 @@ void stMachine (void){
 	  case NOHAYCAJA:
 		 if(gpioRead(CAN_TD)){
 			gpioWrite(GPIO5, ON);
-			pwmWrite(PWM10, 170);
+          arrancarCinta();
 		 }else{
 			gpioWrite(GPIO5, OFF);
 			pwmWrite(PWM10, 0);
@@ -114,7 +114,7 @@ void stMachine (void){
 			estado = NOHAYCAJA;
 		 }else{
 			gpioWrite(GPIO1, ON);
-			pwmWrite(PWM10, 200);
+         arrancarCinta();
 		 }
 	  break;
      case STOP:
