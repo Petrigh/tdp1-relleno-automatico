@@ -9,12 +9,16 @@ void pasoTolva();
 uint32_t readGalga(void);
 uint32_t promedio(uint32_t* value, int i);
 void arrancarCinta(void);
-char* itoa(int value, char* result, int base);
+void frenarCinta(void);
 
 enum tolvaState{E1, E2, E3, E4}; //Estados Tolva;
 enum tolvaState estadoTolva;
+enum veltState {START, NOHAYCAJA, TARA, CONFIGURANDO, TRANSICION, LLENANDO, COMPLETADO, STOP};
+enum veltState estado;
 
 bool llenandoTolva;
 bool controlGalga;
 static uint32_t pesoAnterior, pesoActual;
+int cintaDelayArrancar;
+int cintaDelayFrenar;
 #endif // HELPER_H

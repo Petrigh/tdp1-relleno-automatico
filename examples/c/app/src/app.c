@@ -13,6 +13,7 @@ int main(void) {
    //Inicializar la placa
    boardInit();
    initialize();
+   stop();
    //Configuracion de conteo de interrupcion periodica (cada 10 ms)
    tickInit( 2 );
    //Configuracion de llamado de una funcion

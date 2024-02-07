@@ -7,7 +7,6 @@ void initCinta(void);
 void initTolva(void);
 void initButtons(void);
 uint32_t value;
-static int cintaDelay = 0;
 
 
 uint8_t pinV[4] = {LCD4,LCDRS,LCD3,LCD2}; //Motor paso a paso
@@ -23,7 +22,7 @@ void initialize(void){
    controlGalga = false;
    pesoAnterior = 0;
    pesoActual = 0;
-   uartConfig(UART_USB, 115200);
+   estado = STOP;
 }
 
 void initIRyLED(void){
@@ -65,7 +64,7 @@ void configGalga(void){
 	gpioWrite(RS232_RXD , OFF);//SK
 	gpioWrite(RS232_TXD , ON);//DT
 	while(gpioRead(RS232_TXD) == ON);
-	for(i=0;i<25;i++){//Canal A, amplificador de 128
+	for(i=0;i<100;i++){//Canal A, amplificador de 128
 	   gpioWrite(RS232_RXD , ON);
 	   gpioWrite(RS232_RXD , OFF);
 	}
@@ -134,36 +133,22 @@ void pasoTolva(){
 }
 
 void arrancarCinta(void){
-   int pwmActual;
-   pwmActual = pwmRead(PWM10);
-   if((pwmActual == 0) && (cintaDelay++ < 3)){
+   if(cintaDelayArrancar++ < 50){
       pwmWrite(PWM10, 255);
+      cintaDelayFrenar = 0;
    }else{
       pwmWrite(PWM10, 170);
-      cintaDelay = 0;
    }
 }
-char* itoa(int value, char* result, int base) {
-   // check that the base if valid
-   if (base < 2 || base > 36) { *result = '\0'; return result; }
 
-   char* ptr = result, *ptr1 = result, tmp_char;
-   int tmp_value;
-
-   do {
-      tmp_value = value;
-      value /= base;
-      *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz" [35 + (tmp_value - value * base)];
-   } while ( value );
-
-   // Apply negative sign
-   if (tmp_value < 0) *ptr++ = '-';
-   *ptr-- = '\0';
-   while(ptr1 < ptr) {
-      tmp_char = *ptr;
-      *ptr--= *ptr1;
-      *ptr1++ = tmp_char;
+void frenarCinta(void){
+   if(cintaDelayFrenar++ < 2){
+      pwmWrite(PWM10, 120);
+      cintaDelayArrancar = 0;
+   }else{
+      pwmWrite(PWM10, 0);
+      estado = CONFIGURANDO;
    }
-   return result;
 }
+
 

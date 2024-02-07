@@ -2,8 +2,6 @@
 #include "helper.h"
 
 uint8_t pinLED[3] = {GPIO1,GPIO3,GPIO5}; //3 LEDS (AZUL, AMARILLO, VERDE)
-enum veltState {START, NOHAYCAJA, TARA, CONFIGURANDO, TRANSICION, LLENANDO, COMPLETADO, STOP};
-enum veltState estado = STOP;
 enum galgaState {LOAD, TARE};
 enum galgaState galestado;
 int i,system_call_count;
@@ -11,7 +9,6 @@ int32_t medidas[10];
 int32_t average;
 int toogleLED = 0;
 int preescalerGalga = 0;
-static char buffer[10];
 
 
 void initRoutine(void){
@@ -23,6 +20,8 @@ void initRoutine(void){
    gpioWrite(GPIO5, OFF);
    pwmWrite(PWM10, 0);
    llenandoTolva = false;
+   cintaDelayArrancar = 0;
+   cintaDelayFrenar = 0;
 }
 
 
@@ -34,15 +33,13 @@ void stMachine (void){
           arrancarCinta();
 		 }else{
 			gpioWrite(GPIO5, OFF);
-			pwmWrite(PWM10, 0);
-			estado = CONFIGURANDO;
+         frenarCinta();
 		 }
 	  break;
 	  case CONFIGURANDO:
 		 configGalga();
 		 estado = TRANSICION;
 		 galestado = TARE;
-      uartWriteString( UART_USB, "medidas::\r\n" );
 	  break;
 	  case TRANSICION:
 		 if(gpioRead(RS232_TXD) == OFF){
@@ -62,17 +59,10 @@ void stMachine (void){
 			system_call_count = 0;
 			galestado = LOAD;
 			estado = TRANSICION;
-         uartWriteString( UART_USB, "promedio:\r\n" );
-         itoa(average, buffer, 10);
-         uartWriteString( UART_USB, buffer );
-         uartWriteString( UART_USB, "\r\n" );
 		} else {
 			medidas[system_call_count] = readGalga();
 			galestado = TARE;
 			estado = TRANSICION;
-         itoa(medidas[system_call_count], buffer, 10);
-         uartWriteString( UART_USB, buffer );
-         uartWriteString( UART_USB, "\r\n" );
 		 }
 	  break;
 	  case LLENANDO:
@@ -87,19 +77,14 @@ void stMachine (void){
 		   galestado = LOAD;
 		   estado = TRANSICION;
 		}
-      if(preescalerGalga++ > 300){
+      if(preescalerGalga++ > 150){
          controlGalga = true;
          preescalerGalga = 0;
          pesoActual = medidas[0];
          
       }
-      if(preescalerGalga > 20){
-         itoa(medidas[0] - average, buffer, 10);
-         uartWriteString( UART_USB, buffer );
-         uartWriteString( UART_USB, "\r\n" );
-      }
       if( controlGalga == true) {
-         if((pesoAnterior != 0) && ((pesoActual - pesoAnterior) <  100)){
+         if((pesoAnterior != 0) && ((pesoActual - pesoAnterior) <  200)){
             stop();
          }
 		   pesoAnterior = pesoActual;
@@ -110,7 +95,6 @@ void stMachine (void){
 		 gpioWrite(GPIO3, OFF);
 		 if (gpioRead(CAN_TD)){
 			gpioWrite(GPIO1, OFF);
-			pwmWrite(PWM10, 0);
 			estado = NOHAYCAJA;
 		 }else{
 			gpioWrite(GPIO1, ON);
@@ -149,4 +133,6 @@ void stop(void){
    pesoAnterior = 0;
    pesoActual = 0;
    preescalerGalga = 0;
+   cintaDelayArrancar = 0;
+   cintaDelayFrenar = 0;
 }
