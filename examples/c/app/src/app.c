@@ -7,10 +7,11 @@ bool exe= false;
 int preescaler = 0;
 int tocoStart = 0;
 int tocoStop = 0;
+uint8_t valor;
 
 int main(void) {
    //Inicializar la placa
-   boardConfig();
+   boardInit();
    initialize();
    //Configuracion de conteo de interrupcion periodica (cada 10 ms)
    tickInit( 2 );

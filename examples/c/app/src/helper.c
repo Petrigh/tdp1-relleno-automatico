@@ -48,7 +48,9 @@ void initButtons(void){
 }
 
 void initCinta(void){
-   pwmConfig(0, PWM_ENABLE);
+   pwmInit( 0, PWM_ENABLE);
+   pwmInit( PWM10, PWM_ENABLE_OUTPUT);
+   pwmWrite(PWM10, 0);
 }
 
 void initTolva(void){
@@ -78,9 +80,9 @@ uint32_t readGalga(void){
 	   value+=gpioRead(RS232_TXD);
 	   gpioWrite(RS232_RXD , OFF);
 	}
-   gpioWrite(RS232_RXD , ON); //1 pulso mas para elegir el canal
+   gpioWrite(RS232_RXD , ON); //1 pulsos mas para elegir el canal
    gpioWrite(RS232_RXD , OFF);
-   gpioWrite(RS232_TXD , ON);
+   gpioWrite(RS232_TXD , ON); // Prende la ready
    return value - OFFSET;
 }
 

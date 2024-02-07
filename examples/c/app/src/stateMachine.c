@@ -31,7 +31,7 @@ void stMachine (void){
 	  case NOHAYCAJA:
 		 if(gpioRead(CAN_TD)){
 			gpioWrite(GPIO5, ON);
-			pwmWrite(PWM10, 200);
+			pwmWrite(PWM10, 170);
 		 }else{
 			gpioWrite(GPIO5, OFF);
 			pwmWrite(PWM10, 0);
@@ -42,6 +42,7 @@ void stMachine (void){
 		 configGalga();
 		 estado = TRANSICION;
 		 galestado = TARE;
+      uartWriteString( UART_USB, "medidas::\r\n" );
 	  break;
 	  case TRANSICION:
 		 if(gpioRead(RS232_TXD) == OFF){
@@ -61,10 +62,17 @@ void stMachine (void){
 			system_call_count = 0;
 			galestado = LOAD;
 			estado = TRANSICION;
+         uartWriteString( UART_USB, "promedio:\r\n" );
+         itoa(average, buffer, 10);
+         uartWriteString( UART_USB, buffer );
+         uartWriteString( UART_USB, "\r\n" );
 		} else {
 			medidas[system_call_count] = readGalga();
 			galestado = TARE;
 			estado = TRANSICION;
+         itoa(medidas[system_call_count], buffer, 10);
+         uartWriteString( UART_USB, buffer );
+         uartWriteString( UART_USB, "\r\n" );
 		 }
 	  break;
 	  case LLENANDO:
@@ -85,8 +93,13 @@ void stMachine (void){
          pesoActual = medidas[0];
          
       }
+      if(preescalerGalga > 20){
+         itoa(medidas[0] - average, buffer, 10);
+         uartWriteString( UART_USB, buffer );
+         uartWriteString( UART_USB, "\r\n" );
+      }
       if( controlGalga == true) {
-         if((pesoAnterior != 0) && ((pesoActual - pesoAnterior) <  350)){
+         if((pesoAnterior != 0) && ((pesoActual - pesoAnterior) <  100)){
             stop();
          }
 		   pesoAnterior = pesoActual;
@@ -94,7 +107,6 @@ void stMachine (void){
       }
 	  break;
 	  case COMPLETADO:
-      pwmInit(PWM10, PWM_ENABLE_OUTPUT);
 		 gpioWrite(GPIO3, OFF);
 		 if (gpioRead(CAN_TD)){
 			gpioWrite(GPIO1, OFF);
@@ -112,7 +124,6 @@ void stMachine (void){
             gpioToggle(GPIO3);
             gpioToggle(GPIO5);
          }
-         pwmConfig(0, PWM_DISABLE);
      break;
    }
 }
@@ -132,6 +143,8 @@ void stop(void){
    gpioWrite(GPIO1, OFF);
    gpioWrite(GPIO3, OFF);
    gpioWrite(GPIO5, OFF);
+   pwmWrite(PWM10, 0);
+   llenandoTolva = false;
    controlGalga = false;
    pesoAnterior = 0;
    pesoActual = 0;
